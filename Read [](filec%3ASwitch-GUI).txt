@@ -1,0 +1,125 @@
+Read [](file:///c%3A/Switch-GUI)
+
+Analyzing your answers...
+
+Danke – alle Infos vorhanden. Ich erstelle jetzt den vollständigen Plan. 
+
+Created memory file [](file:///c%3A/Users/k.johler/AppData/Roaming/Code/User/workspaceStorage/7698e27a219519a01e0d531cc460687e/GitHub.copilot-chat/memory-tool/memories/NGU1YzA0NzEtNzA2My00M2RmLWJhNzYtNjlmYTJhOWNkMmUx/plan.md)
+
+---
+
+## Plan: Cisco Switch WebGUI
+
+**Kurzfassung:** Ein lokales WebGUI (im Browser erreichbar) mit einem Python-Backend (FastAPI), das per SSH / Netmiko mit den Switches kommuniziert. Frontend mit Bootstrap 5 + Vanilla JS – kein schweres Framework, passt zu deiner Erfahrung. Machbarkeit: **sehr gut machbar**, Aufwand ca. 2–4 Wochen für einen funktionalen Stand.
+
+---
+
+### Machbarkeit & Performance-Einschätzung
+
+| Aspekt | Bewertung |
+|---|---|
+| Grundsätzlich umsetzbar | ✅ Ja, vollständig |
+| SSH-Latenz pro Befehl | ~1–3 Sekunden – gelöst durch Caching |
+| Netmiko-Support für C3750X / 2960X | ✅ Nativ unterstützt |
+| Aufwand (Solo, Grundkenntnisse) | ~2–4 Wochen bis MVP |
+| Multi-User-Fähigkeit | ✅ FastAPI + WebSocket unterstützt das |
+
+---
+
+### Tech-Stack
+
+| Schicht | Technologie | Warum |
+|---|---|---|
+| Backend | **FastAPI** (Python) | Async, einfach, WebSocket-Support |
+| SSH / CLI | **Netmiko** | Cisco IOS nativ, config_mode, automatisches Login |
+| CLI-Parsing | **ntc-templates** | Parst `show`-Befehle in strukturierte Daten (in Netmiko enthalten) |
+| Frontend | **Bootstrap 5 + Vanilla JS** | Passt zur Erfahrung, kein Build-Tool nötig |
+| Terminal im Browser | **xterm.js** + WebSocket | Standard-Bibliothek für Browser-Terminals |
+| Datenbank | **SQLite** | Kein separater DB-Server nötig, für Logs + Switch-Inventar |
+| Credentials | **.env-Datei** (python-dotenv) | Sicherer als Klartext im JSON |
+| Server | **Uvicorn** | Startet mit einem Befehl, unter Windows einfach |
+
+---
+
+### Phase 1 – Projekt-Setup & Backend-Grundlage
+
+1. Projektstruktur anlegen: `backend/`, `frontend/`, `config/`
+2. `config/switches.json` – Switch-Inventar (Hostname, IP, Modell, Stack-Flag)
+3. `.env`-Datei mit SSH-Credentials (Username + Password)
+4. FastAPI-App + Uvicorn-Start-Script
+5. Netmiko-Verbindungspool (Session-Caching, damit nicht bei jedem Request neu verbunden wird)
+6. Erstes API-Endpoint: `GET /api/switches` → gibt Switch-Liste zurück
+
+### Phase 2 – Port-Daten & Visualisierung *(abhängig von Phase 1)*
+
+7. `show interfaces status` via Netmiko ausführen → ntc-templates parst in JSON (Port-Name, Status, VLAN, Speed, Description)
+8. `GET /api/switches/{id}/ports` → gibt alle Ports als JSON zurück (gecacht für 30 Sek.)
+9. **Port-Grid im Browser**: SVG oder CSS-Grid, 48 Ports (3750X) bzw. entsprechend 2960X — grün = connected, rot = notconnect, grau = disabled
+10. Port-Klick → Detail-Modal mit `show run interface GigabitEthernetX/X/X`
+
+### Phase 3 – Konfig-Editierung *(abhängig von Phase 2)*
+
+11. Port-Aktionen per API: Description setzen, VLAN ändern, `shutdown` / `no shutdown`
+12. Netmiko `config_mode()` → Befehle in den Switch schreiben
+13. Änderungslog in SQLite (Wer, Was, Wann)
+
+### Phase 4 – Terminal *(parallel zu Phase 3 möglich)*
+
+14. WebSocket-Endpoint in FastAPI (`/ws/terminal/{switch_id}`)
+15. SSH-Stream-Relay: Browser-Eingabe → FastAPI-WS → Paramiko-Shell → Ausgabe zurück
+16. xterm.js im Frontend einbinden (CDN, keine Installation nötig)
+
+### Phase 5 – Archive & Erweiterte Views *(abhängig von Phase 1)*
+
+17. `show archive`, `show running-config` als formatierter Text-Viewer
+18. Config-Download-Button (Running-Config als `.txt`)
+19. Switch-Übersicht: Uptime (`show version`), VLAN-Tabelle, CDP-Nachbarn
+
+---
+
+### Projektstruktur
+
+```
+c:\Switch-GUI\
+├── backend\
+│   ├── main.py          ← FastAPI-App
+│   ├── network.py       ← Netmiko-Helpers + Parsing
+│   ├── models.py        ← Datenmodelle
+│   └── database.py      ← SQLite-Logging
+├── frontend\
+│   ├── index.html       ← Switch-Auswahl
+│   ├── dashboard.html   ← Port-Grid + Terminal
+│   └── static\          ← JS, CSS
+├── config\
+│   └── switches.json    ← Switch-Inventar
+├── .env                 ← Credentials (nicht ins Git!)
+└── requirements.txt
+```
+
+---
+
+### Verifikation
+
+1. Netmiko-Test-Script ausführen: SSH-Login zu allen 6 Switches prüfen
+2. Port-Grid korrekt für 48-Port-Stack (Ports physisch nummeriert, Stack-Member erkennbar)
+3. Terminal-Session: Befehl tippen → korrekte Ausgabe im Browser
+4. Config-Schreiben: Description auf einem Port setzen, im Switch via CLI prüfen
+5. Zwei Browser-Tabs gleichzeitig öffnen → kein Login-Konflikt (Session-Pooling)
+
+---
+
+### Entscheidungen & Abgrenzung
+
+- **Kein Vue/React:** Bootstrap 5 + Vanilla JS reicht, kein Build-Tool nötig
+- **Keine Live-Polling-Schleife:** Daten werden bei Page-Load und manuellem „Refresh"-Button geladen – verhindert SSH-Dauerverbindungen
+- **Credentials zentral in `.env`:** Ein Passwort für alle Switches (wie du beschrieben hast)
+- **Stack-Unterstützung:** Die 3750X-Stacks werden als ein logisches Gerät dargestellt, Ports mit Stack-Member-Nummer (z.B. `Gi1/0/1`, `Gi2/0/1`)
+- **Nicht enthalten:** SNMP-Monitoring, Alerting/E-Mail, Benutzer-Login (alle haben vollen Zugriff)
+
+---
+
+### Offene Punkte für dich zum Bestätigen
+
+1. **Credentials:** Sollen alle 6 Switches das **gleiche** SSH-Username/Passwort nutzen, oder pro Switch unterschiedlich?
+2. **Stack-Darstellung:** Sollen beide Stacks (je 3 Switches) als **zwei separate Geräte** in der Switch-Auswahl erscheinen, oder als ein Gerät mit 3 Mitgliedern?
+3. **2960X Port-Anzahl:** Welches 2960X-Modell genau (z.B. 2960X-24 oder 2960X-48)?

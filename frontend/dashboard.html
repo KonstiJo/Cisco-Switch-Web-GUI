@@ -1,0 +1,140 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Switch Dashboard</title>
+  <link rel="stylesheet" href="/static/style.css" />
+</head>
+<body>
+  <header>
+    <a href="/" class="back-link">← Übersicht</a>
+    <h1 id="switch-title">Switch Dashboard</h1>
+    <span id="switch-ip" class="badge"></span>
+  </header>
+
+  <main>
+    <!-- Port Grid -->
+    <section class="section">
+      <h2>Ports</h2>
+      <div id="port-grid" class="port-grid">
+        <p class="loading">Lade Ports…</p>
+      </div>
+    </section>
+
+    <!-- CLI Terminal -->
+    <section class="section">
+      <h2>Terminal</h2>
+      <div id="terminal-output" class="terminal-output" aria-live="polite"></div>
+      <form id="terminal-form" class="terminal-form">
+        <input
+          id="terminal-input"
+          type="text"
+          placeholder="show version"
+          autocomplete="off"
+          spellcheck="false"
+          aria-label="CLI-Befehl eingeben"
+        />
+        <button type="submit" class="btn">Ausführen</button>
+      </form>
+    </section>
+  </main>
+
+  <script src="/static/app.js"></script>
+  <script>
+    const switchIp = location.pathname.split("/").pop();
+    document.getElementById("switch-ip").textContent = switchIp;
+    document.title = `Dashboard – ${switchIp}`;
+
+    // ── Port Grid ────────────────────────────────────────────────────────────
+    async function loadPorts() {
+      const grid = document.getElementById("port-grid");
+      try {
+        const res = await fetch(`/api/switches/${encodeURIComponent(switchIp)}/ports`);
+        if (!res.ok) throw new Error(await res.text());
+        const ports = await res.json();
+        grid.innerHTML = "";
+
+        if (!ports.length) {
+          grid.innerHTML = "<p>Keine Ports gefunden.</p>";
+          return;
+        }
+
+        ports.forEach(port => {
+          const status = (port.status || "").toLowerCase();
+          const isUp = status === "connected";
+          const tile = document.createElement("div");
+          tile.className = `port-tile ${isUp ? "up" : "down"}`;
+          tile.title = `${port.port || port.interface} – ${port.status}`;
+          tile.innerHTML = `
+            <span class="port-name">${escapeHtml(port.port || port.interface || "?")}</span>
+            <span class="port-status">${escapeHtml(port.status || "–")}</span>
+            <button class="port-btn" data-port="${escapeHtml(port.port || port.interface)}" data-state="${isUp ? "down" : "up"}">
+              ${isUp ? "Deaktivieren" : "Aktivieren"}
+            </button>
+          `;
+          grid.appendChild(tile);
+        });
+
+        grid.querySelectorAll(".port-btn").forEach(btn => {
+          btn.addEventListener("click", () => togglePort(btn.dataset.port, btn.dataset.state));
+        });
+      } catch (err) {
+        grid.innerHTML = `<p class="error">Fehler: ${escapeHtml(err.message)}</p>`;
+      }
+    }
+
+    async function togglePort(portId, newState) {
+      const res = await fetch(
+        `/api/switches/${encodeURIComponent(switchIp)}/port/${encodeURIComponent(portId)}`,
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ state: newState }),
+        }
+      );
+      if (res.ok) {
+        loadPorts();
+      } else {
+        alert("Fehler beim Umschalten des Ports.");
+      }
+    }
+
+    // ── Terminal ─────────────────────────────────────────────────────────────
+    document.getElementById("terminal-form").addEventListener("submit", async e => {
+      e.preventDefault();
+      const input = document.getElementById("terminal-input");
+      const command = input.value.trim();
+      if (!command) return;
+
+      appendTerminal(`> ${command}`);
+      input.value = "";
+
+      try {
+        const res = await fetch(
+          `/api/switches/${encodeURIComponent(switchIp)}/command`,
+          {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ command }),
+          }
+        );
+        const data = await res.json();
+        appendTerminal(res.ok ? data.output : `Fehler: ${data.detail}`);
+      } catch (err) {
+        appendTerminal(`Verbindungsfehler: ${err.message}`);
+      }
+    });
+
+    function appendTerminal(text) {
+      const out = document.getElementById("terminal-output");
+      const pre = document.createElement("pre");
+      pre.textContent = text;
+      out.appendChild(pre);
+      out.scrollTop = out.scrollHeight;
+    }
+
+    loadPorts();
+  </script>
+</body>
+</html>

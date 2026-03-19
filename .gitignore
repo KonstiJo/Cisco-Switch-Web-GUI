@@ -1,0 +1,17 @@
+# Credentials – niemals einchecken!
+.env
+
+# Python
+__pycache__/
+*.py[cod]
+*.pyo
+.venv/
+venv/
+env/
+
+# Datenbank
+*.db
+
+# IDE
+.vscode/
+.idea/

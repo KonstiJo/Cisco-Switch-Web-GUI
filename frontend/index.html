@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Switch GUI – Übersicht</title>
+  <link rel="stylesheet" href="/static/style.css" />
+</head>
+<body>
+  <header>
+    <h1>Switch GUI</h1>
+    <p class="subtitle">Switch-Inventar</p>
+  </header>
+
+  <main>
+    <div id="switch-list" class="switch-grid">
+      <p class="loading">Lade Switches…</p>
+    </div>
+  </main>
+
+  <script src="/static/app.js"></script>
+  <script>
+    async function loadSwitches() {
+      const res = await fetch("/api/switches");
+      const switches = await res.json();
+      const grid = document.getElementById("switch-list");
+      grid.innerHTML = "";
+
+      if (!switches.length) {
+        grid.innerHTML = "<p>Keine Switches konfiguriert.</p>";
+        return;
+      }
+
+      switches.forEach(sw => {
+        const card = document.createElement("div");
+        card.className = "switch-card";
+        card.innerHTML = `
+          <h2>${escapeHtml(sw.name)}</h2>
+          <p><strong>IP:</strong> ${escapeHtml(sw.ip)}</p>
+          <p><strong>Typ:</strong> ${escapeHtml(sw.device_type)}</p>
+          ${sw.location ? `<p><strong>Standort:</strong> ${escapeHtml(sw.location)}</p>` : ""}
+          <a href="/dashboard/${encodeURIComponent(sw.ip)}" class="btn">Dashboard öffnen</a>
+        `;
+        grid.appendChild(card);
+      });
+    }
+
+    loadSwitches();
+  </script>
+</body>
+</html>

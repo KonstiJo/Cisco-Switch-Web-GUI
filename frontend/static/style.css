@@ -1,0 +1,172 @@
+/* ── Reset & Base ─────────────────────────────────────────────────────────── */
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+:root {
+  --bg:        #0f1117;
+  --surface:   #1a1d27;
+  --border:    #2e3244;
+  --accent:    #4f8ef7;
+  --success:   #2eb86a;
+  --danger:    #e05252;
+  --text:      #e2e8f0;
+  --muted:     #8892a4;
+  --radius:    8px;
+  --font:      'Segoe UI', system-ui, sans-serif;
+  --mono:      'Cascadia Code', 'Consolas', monospace;
+}
+
+body {
+  background: var(--bg);
+  color: var(--text);
+  font-family: var(--font);
+  min-height: 100vh;
+}
+
+/* ── Header ──────────────────────────────────────────────────────────────── */
+header {
+  background: var(--surface);
+  border-bottom: 1px solid var(--border);
+  padding: 1rem 2rem;
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+
+header h1 { font-size: 1.4rem; }
+.subtitle  { color: var(--muted); font-size: 0.9rem; }
+
+.back-link {
+  color: var(--accent);
+  text-decoration: none;
+  font-size: 0.9rem;
+  white-space: nowrap;
+}
+.back-link:hover { text-decoration: underline; }
+
+.badge {
+  background: var(--border);
+  color: var(--muted);
+  padding: 0.2rem 0.6rem;
+  border-radius: 999px;
+  font-size: 0.8rem;
+  font-family: var(--mono);
+}
+
+/* ── Main Layout ─────────────────────────────────────────────────────────── */
+main    { max-width: 1280px; margin: 0 auto; padding: 2rem; }
+.section { margin-bottom: 2.5rem; }
+.section h2 { font-size: 1.1rem; color: var(--muted); margin-bottom: 1rem; }
+
+/* ── Switch Grid (index) ─────────────────────────────────────────────────── */
+.switch-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+  gap: 1rem;
+}
+
+.switch-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 1.25rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+}
+
+.switch-card h2 { font-size: 1rem; }
+.switch-card p  { font-size: 0.85rem; color: var(--muted); }
+.switch-card p strong { color: var(--text); }
+
+/* ── Port Grid (dashboard) ───────────────────────────────────────────────── */
+.port-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(130px, 1fr));
+  gap: 0.75rem;
+}
+
+.port-tile {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 0.75rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.3rem;
+  font-size: 0.8rem;
+  transition: border-color 0.2s;
+}
+
+.port-tile.up   { border-left: 3px solid var(--success); }
+.port-tile.down { border-left: 3px solid var(--danger); }
+
+.port-name   { font-family: var(--mono); font-size: 0.75rem; color: var(--text); }
+.port-status { color: var(--muted); font-size: 0.72rem; }
+
+.port-btn {
+  margin-top: auto;
+  font-size: 0.7rem;
+  padding: 0.25rem 0.5rem;
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  background: transparent;
+  color: var(--muted);
+  cursor: pointer;
+  transition: background 0.15s, color 0.15s;
+}
+.port-btn:hover { background: var(--border); color: var(--text); }
+
+/* ── Terminal ────────────────────────────────────────────────────────────── */
+.terminal-output {
+  background: #0a0c14;
+  border: 1px solid var(--border);
+  border-radius: var(--radius) var(--radius) 0 0;
+  padding: 1rem;
+  height: 300px;
+  overflow-y: auto;
+  font-family: var(--mono);
+  font-size: 0.8rem;
+  line-height: 1.5;
+  color: #c0c8d8;
+}
+
+.terminal-output pre { white-space: pre-wrap; word-break: break-all; }
+
+.terminal-form {
+  display: flex;
+  border: 1px solid var(--border);
+  border-top: none;
+  border-radius: 0 0 var(--radius) var(--radius);
+  overflow: hidden;
+}
+
+.terminal-form input {
+  flex: 1;
+  background: #0a0c14;
+  border: none;
+  color: var(--text);
+  font-family: var(--mono);
+  font-size: 0.85rem;
+  padding: 0.6rem 1rem;
+  outline: none;
+}
+
+/* ── Buttons ─────────────────────────────────────────────────────────────── */
+.btn {
+  display: inline-block;
+  background: var(--accent);
+  color: #fff;
+  border: none;
+  border-radius: var(--radius);
+  padding: 0.5rem 1rem;
+  font-size: 0.85rem;
+  cursor: pointer;
+  text-decoration: none;
+  transition: opacity 0.15s;
+  margin-top: 0.75rem;
+}
+.btn:hover { opacity: 0.85; }
+
+/* ── Utilities ───────────────────────────────────────────────────────────── */
+.loading { color: var(--muted); font-size: 0.9rem; }
+.error   { color: var(--danger); font-size: 0.85rem; }

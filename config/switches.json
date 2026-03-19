@@ -1,0 +1,42 @@
+[
+  {
+    "ip": "10.0.0.1",
+    "name": "Stack-A",
+    "device_type": "cisco_ios",
+    "location": "Serverraum",
+    "model": "WS-C3750X-48P",
+    "stack": true,
+    "stack_members": 3,
+    "port_count": 48
+  },
+  {
+    "ip": "10.0.0.2",
+    "name": "Stack-B",
+    "device_type": "cisco_ios",
+    "location": "Serverraum",
+    "model": "WS-C3750X-48P",
+    "stack": true,
+    "stack_members": 3,
+    "port_count": 48
+  },
+  {
+    "ip": "10.0.0.3",
+    "name": "Access-SW-01",
+    "device_type": "cisco_ios",
+    "location": "Etage 1",
+    "model": "WS-C2960X-48FPS",
+    "stack": false,
+    "stack_members": 1,
+    "port_count": 48
+  },
+  {
+    "ip": "10.0.0.4",
+    "name": "Access-SW-02",
+    "device_type": "cisco_ios",
+    "location": "Etage 2",
+    "model": "WS-C2960X-48FPS",
+    "stack": false,
+    "stack_members": 1,
+    "port_count": 48
+  }
+]
